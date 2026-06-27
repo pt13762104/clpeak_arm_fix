@@ -31,6 +31,7 @@ using namespace cpu_simd;
 // ---- FP32 / FP64 FMA-chains -----------------------------------------------
 static double runFp32Chain(uint64_t outer)
 {
+#define F32_NACC 32
   f32v acc[F32_NACC];
   // Seed the coefficients through volatile so the compiler can't prove their
   // values and close the affine recurrence acc=acc*b+c.  On non-FMA targets
@@ -39,16 +40,13 @@ static double runFp32Chain(uint64_t outer)
   // (acc*b^N + const), deleting most of the work while opsPerIter still counts
   // it -> an impossible peak (SSE2 reported > AVX2).  Same guard as the int32
   // chain.  No-op on FMA targets (b/c become runtime operands loaded once).
-  volatile float vb = 0.999999f, vc = 0.000001f;
-  const f32v b = f32_set(vb);
-  const f32v c = f32_set(vc);
   for (int j = 0; j < F32_NACC; j++) acc[j] = f32_set(0.1f * (float)(j + 1));
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < F32_NACC; j++) acc[j] = f32_fma(acc[j], b, c);
+      for (int j = 0; j < F32_NACC; j++) acc[j] = f32_fma(acc[j], acc[j], acc[j]);
     }
   f32v s = acc[0];
   for (int j = 1; j < F32_NACC; j++) s = f32_add(s, acc[j]);
@@ -57,19 +55,17 @@ static double runFp32Chain(uint64_t outer)
 
 static double runFp64Chain(uint64_t outer)
 {
+#define F64_NACC 32
   f64v acc[F64_NACC];
   // Volatile-seed the coefficients to keep the affine chain from collapsing on
   // non-FMA (SSE2 / scalar) targets under -ffast-math.  See runFp32Chain.
-  volatile double vb = 0.999999, vc = 0.000001;
-  const f64v b = f64_set(vb);
-  const f64v c = f64_set(vc);
   for (int j = 0; j < F64_NACC; j++) acc[j] = f64_set(0.1 * (double)(j + 1));
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < F64_NACC; j++) acc[j] = f64_fma(acc[j], b, c);
+      for (int j = 0; j < F64_NACC; j++) acc[j] = f64_fma(acc[j], acc[j], acc[j]);
     }
   f64v s = acc[0];
   for (int j = 1; j < F64_NACC; j++) s = f64_add(s, acc[j]);
@@ -84,16 +80,13 @@ static double runInt32Chain(uint64_t outer)
   // strength-reduce `acc*k` into shifts/adds (measuring the shifter, not the
   // integer multiplier, and varying with -mtune/inlining).  Reading it through
   // volatile forces a real vpmulld / vmlaq — a consistent, honest IMAD peak.
-  volatile int vmul = 1664525;
-  const i32v b = i32_set((int)vmul);
-  const i32v c = i32_set(1013904223);
   for (int j = 0; j < I32_NACC; j++) acc[j] = i32_set(j + 1);
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < I32_NACC; j++) acc[j] = i32_madd(acc[j], b, c);
+      for (int j = 0; j < I32_NACC; j++) acc[j] = i32_madd(acc[j], acc[j], acc[j]);
     }
   i32v s = acc[0];
   for (int j = 1; j < I32_NACC; j++) s = i32_add(s, acc[j]);
@@ -231,19 +224,17 @@ static uint64_t readBufferChecksum(const float *p, size_t M, uint64_t iters)
 // ---- FP16 native FMA -------------------------------------------------------
 #if defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #define CPU_HAS_FP16_KERNEL 1
-static constexpr int FP16_LANES = 8, FP16_NACC = 16;
+static constexpr int FP16_LANES = 8, FP16_NACC = 32;
 static double runFp16Chain(uint64_t outer)
 {
   float16x8_t acc[FP16_NACC];
-  const float16x8_t b = vdupq_n_f16((float16_t)0.9995f);
-  const float16x8_t c = vdupq_n_f16((float16_t)0.001f);
   for (int j = 0; j < FP16_NACC; j++) acc[j] = vdupq_n_f16((float16_t)(0.1f * (j + 1)));
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < FP16_NACC; j++) acc[j] = vfmaq_f16(c, acc[j], b);
+      for (int j = 0; j < FP16_NACC; j++) acc[j] = vfmaq_f16(acc[j], acc[j], acc[j]);
     }
   float16x8_t s = acc[0];
   for (int j = 1; j < FP16_NACC; j++) s = vaddq_f16(s, acc[j]);
@@ -278,20 +269,17 @@ static double runFp16Chain(uint64_t outer)
 // ---- BF16 dot --------------------------------------------------------------
 #if defined(__ARM_FEATURE_BF16_VECTOR_ARITHMETIC) || defined(__ARM_FEATURE_BF16)
 #define CPU_HAS_BF16_KERNEL 1
-static constexpr int BF16_NACC = 16, BF16_FLOPS_PER_INSTR = 16;
+static constexpr int BF16_NACC = 32, BF16_FLOPS_PER_INSTR = 16;
 static double runBf16Chain(uint64_t outer)
 {
   float32x4_t acc[BF16_NACC];
-  const bfloat16x4_t lo = vcvt_bf16_f32(vdupq_n_f32(1.0001f));
-  const bfloat16x8_t a  = vcombine_bf16(lo, lo);
-  const bfloat16x8_t b  = vcombine_bf16(lo, lo);
-  for (int j = 0; j < BF16_NACC; j++) acc[j] = vdupq_n_f32(0.0f);
+  for (int j = 0; j < BF16_NACC; j++) acc[j] = {37,63,36,67};
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < BF16_NACC; j++) acc[j] = vbfdotq_f32(acc[j], a, b);
+      for (int j = 0; j < BF16_NACC; j++) acc[j] = vbfdotq_f32(acc[j], acc[j], acc[j]);
     }
   float32x4_t s = acc[0];
   for (int j = 1; j < BF16_NACC; j++) s = vaddq_f32(s, acc[j]);
@@ -322,7 +310,7 @@ static double runBf16Chain(uint64_t outer)
 // ---- Mixed precision (fp16 mul -> fp32 acc, widening FMLA) ------------------
 #if (defined(__ARM_FEATURE_FP16FML) || defined(__ARM_FEATURE_FP16_FML)) && defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #define CPU_HAS_MP_KERNEL 1
-static constexpr int MP_NACC = 16, MP_OPS_PER_INSTR = 16;  // 2 FMLAL = 8 mul + 8 add
+static constexpr int MP_NACC = 32, MP_OPS_PER_INSTR = 8;  // 2 FMLAL = 8 mul + 8 add
 static double runMpChain(uint64_t outer)
 {
   float32x4_t acc[MP_NACC];
@@ -342,18 +330,16 @@ static double runMpChain(uint64_t outer)
   const float16x8_t decay  = vdupq_n_f16((float16_t)-0.000977f);  // <0: contracts
   const float16x8_t refill = vdupq_n_f16((float16_t) 0.001953f);
   const float16x8_t one    = vdupq_n_f16((float16_t) 1.0f);
-  for (int j = 0; j < MP_NACC; j++) acc[j] = vdupq_n_f32(1.0f + 0.01f * j);
+  for (int j = 0; j < MP_NACC; j++) acc[j] = {37,63,36,67};
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < MP_NACC; j++)
+      for (int j = 0; j < MP_NACC; j+=2)
       {
-        float16x4_t h  = vcvt_f16_f32(acc[j]);          // narrow: nonlinear feedback
-        float16x8_t hh = vcombine_f16(h, h);
-        acc[j] = vfmlalq_low_f16(acc[j], hh, decay);    // acc += narrow(acc)*(-decay)
-        acc[j] = vfmlalq_high_f16(acc[j], one, refill); // acc += 1*refill (off-zero)
+        acc[j] = vfmlalq_low_f16(acc[j], acc[j], acc[j]);    // acc += narrow(acc)*(-decay)
+        acc[j+1] = vfmlalq_high_f16(acc[j+1], acc[j+1],acc[j+1]); // acc += 1*refill (off-zero)
       }
     }
   float32x4_t s = acc[0];
@@ -410,19 +396,17 @@ static double runInt8DpChain(uint64_t outer)
 }
 #elif defined(__ARM_FEATURE_DOTPROD)
 #define CPU_HAS_INT8DP_KERNEL 1
-static constexpr int I8_NACC = 16, I8_OPS_PER_INSTR = 32;
+static constexpr int I8_NACC = 32, I8_OPS_PER_INSTR = 32;
 static double runInt8DpChain(uint64_t outer)
 {
   int32x4_t acc[I8_NACC];
-  const int8x16_t a = vdupq_n_s8(3);
-  const int8x16_t b = vdupq_n_s8(5);
-  for (int j = 0; j < I8_NACC; j++) acc[j] = vdupq_n_s32(0);
+  for (int j = 0; j < I8_NACC; j++) acc[j] = {37,63,36,67};
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < I8_NACC; j++) acc[j] = vdotq_s32(acc[j], a, b);
+      for (int j = 0; j < I8_NACC; j++) acc[j] = vdotq_s32(acc[j], acc[j], acc[j]);
     }
   int32x4_t s = acc[0];
   for (int j = 1; j < I8_NACC; j++) s = vaddq_s32(s, acc[j]);
@@ -466,20 +450,18 @@ static double runMatInt8Chain(uint64_t outer)
 }
 #elif defined(__ARM_FEATURE_MATMUL_INT8)
 #define CPU_MAT_INT8_KERNEL 1
-static constexpr double MAT_I8_OPS_PER_K = 16.0 * 64.0;   // MM_NACC * 64
+static constexpr double MAT_I8_OPS_PER_K = 32.0 * 64.0;   // MM_NACC * 64
 static double runMatInt8Chain(uint64_t outer)
 {
-  constexpr int NACC = 16;
+  constexpr int NACC = 32;
   int32x4_t acc[NACC];
-  const int8x16_t a = vdupq_n_s8(3);
-  const int8x16_t b = vdupq_n_s8(5);
-  for (int j = 0; j < NACC; j++) acc[j] = vdupq_n_s32(0);
+  for (int j = 0; j < NACC; j++) acc[j] = {37,63,36,67};
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < NACC; j++) acc[j] = vmmlaq_s32(acc[j], a, b);
+      for (int j = 0; j < NACC; j++) acc[j] = vmmlaq_s32(acc[j], acc[j], acc[j]);
     }
   int32x4_t s = acc[0];
   for (int j = 1; j < NACC; j++) s = vaddq_s32(s, acc[j]);
@@ -521,21 +503,18 @@ static double runMatFpChain(uint64_t outer)
 #elif defined(__ARM_FEATURE_BF16_VECTOR_ARITHMETIC)
 // BFMMLA is part of FEAT_BF16 (no separate I8MM needed).
 #define CPU_MAT_FP_KERNEL 1
-static constexpr double MAT_FP_OPS_PER_K = 16.0 * 32.0;   // BMM_NACC * 32
+static constexpr double MAT_FP_OPS_PER_K = 32.0 * 32.0;   // BMM_NACC * 32
 static double runMatFpChain(uint64_t outer)
 {
-  constexpr int NACC = 16;
+  constexpr int NACC = 32;
   float32x4_t acc[NACC];
-  const bfloat16x4_t lo = vcvt_bf16_f32(vdupq_n_f32(1.0001f));
-  const bfloat16x8_t a  = vcombine_bf16(lo, lo);
-  const bfloat16x8_t b  = vcombine_bf16(lo, lo);
-  for (int j = 0; j < NACC; j++) acc[j] = vdupq_n_f32(0.0f);
+  for (int j = 0; j < NACC; j++) acc[j] = {37,63,36,67};
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < NACC; j++) acc[j] = vbfmmlaq_f32(acc[j], a, b);
+      for (int j = 0; j < NACC; j++) acc[j] = vbfmmlaq_f32(acc[j], acc[j], acc[j]);
     }
   float32x4_t s = acc[0];
   for (int j = 1; j < NACC; j++) s = vaddq_f32(s, acc[j]);

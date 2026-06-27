@@ -57,12 +57,14 @@ CpuThreadPool::~CpuThreadPool()
     if (w.joinable())
       w.join();
 }
-
+#include<iostream>
+#include<chrono>
+using namespace std;
+double T;
 void CpuThreadPool::workerLoop(int tid)
 {
-  pinToCore(tid);
+  pinToCore(nMax - 1 - tid);
   uint64_t myGen = 0;
-
   for (;;)
   {
     const std::function<void(int)> *localJob = nullptr;
@@ -78,15 +80,20 @@ void CpuThreadPool::workerLoop(int tid)
 
     if (localJob)
     {
+chrono::steady_clock Clock;
+auto a=Clock.now();
       (*localJob)(tid);
+auto b=Clock.now();
       std::unique_lock<std::mutex> lk(mtx);
+T+=1e9/chrono::duration_cast<chrono::nanoseconds>(b-a).count();
       if (--remaining == 0)
         cvDone.notify_one();
     }
+
   }
 }
 
-void CpuThreadPool::run(int n, const std::function<void(int)> &body)
+double CpuThreadPool::run(int n, const std::function<void(int)> &body)
 {
   if (n < 1) n = 1;
   if (n > nMax) n = nMax;
@@ -96,9 +103,12 @@ void CpuThreadPool::run(int n, const std::function<void(int)> &body)
   activeCount = n;
   remaining   = n;
   generation++;
+T=0;
   cvStart.notify_all();
   cvDone.wait(lk, [&] { return remaining == 0; });
   job = nullptr;
+
+return n*1e6/T;
 }
 
 #endif // ENABLE_CPU

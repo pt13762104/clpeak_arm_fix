@@ -73,7 +73,7 @@ public:
   int maxThreads() const { return nMax; }
 
   // Run body(tid) on worker threads [0, n) and block until all finish.
-  void run(int n, const std::function<void(int)> &body);
+  double run(int n, const std::function<void(int)> &body);
 
 private:
   void workerLoop(int tid);
