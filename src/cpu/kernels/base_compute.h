@@ -140,7 +140,7 @@ static double runInt32Chain(uint64_t outer)
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < I32_NACC; j++) acc[j] = i32_madd(acc[j], b, c);
+      for (int j = 0; j < I32_NACC; j++) acc[j] = i32_madd(acc[j], acc[j], acc[j]);
     }
   i32v s = acc[0];
   for (int j = 1; j < I32_NACC; j++) s = i32_add(s, acc[j]);

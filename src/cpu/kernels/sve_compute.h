@@ -56,7 +56,7 @@ static double runSveFp32Chain(uint64_t outer)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) a##i = svmad_f32_x(pg, a##i, b, c);
+#define STEP(i) a##i = svmad_f32_x(pg, a##i, a##i, a##i);
       SVE_REP24(STEP)
 #undef STEP
     }
@@ -79,7 +79,7 @@ static double runSveFp64Chain(uint64_t outer)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) a##i = svmad_f64_x(pg, a##i, b, c);
+#define STEP(i) a##i = svmad_f64_x(pg, a##i, a##i, a##i);
       SVE_REP24(STEP)
 #undef STEP
     }
@@ -102,7 +102,7 @@ static double runSveInt32Chain(uint64_t outer)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) a##i = svmad_s32_x(pg, a##i, b, c);
+#define STEP(i) a##i = svmad_s32_x(pg, a##i, a##i, a##i);
       SVE_REP24(STEP)
 #undef STEP
     }
@@ -222,14 +222,14 @@ static double runSveInt8DpChain(uint64_t outer)
 {
   const svbool_t pg = svptrue_b32();
   const svint8_t a = svdup_s8(3), b = svdup_s8(5);
-#define DECL(i) svint32_t acc##i = svdup_s32(0);
+#define DECL(i) svint32_t acc##i = svdup_s32(36);
   SVE_REP16(DECL)
 #undef DECL
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) acc##i = svdot_s32(acc##i, a, b);
+#define STEP(i) acc##i = svdot_s32(acc##i, acc##i, acc##i);
       SVE_REP16(STEP)
 #undef STEP
     }
@@ -249,14 +249,14 @@ static double runSveBf16Chain(uint64_t outer)
   // 0x3F81 ~= 1.0039 in bf16 (nonzero, distinct from an exact 1.0 collapse).
   const svbfloat16_t a = svreinterpret_bf16_u16(svdup_u16(0x3F81));
   const svbfloat16_t b = a;
-#define DECL(i) svfloat32_t acc##i = svdup_f32(0.0f);
+#define DECL(i) svfloat32_t acc##i = svdup_f32(36.0f);
   SVE_REP16(DECL)
 #undef DECL
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) acc##i = svbfdot_f32(acc##i, a, b);
+#define STEP(i) acc##i = svbfdot_f32(acc##i, acc##i, acc##i);
       SVE_REP16(STEP)
 #undef STEP
     }
@@ -271,14 +271,14 @@ static double runSveMatBf16Chain(uint64_t outer)
   const svbool_t pg = svptrue_b32();
   const svbfloat16_t a = svreinterpret_bf16_u16(svdup_u16(0x3F81));
   const svbfloat16_t b = a;
-#define DECL(i) svfloat32_t acc##i = svdup_f32(0.0f);
+#define DECL(i) svfloat32_t acc##i = svdup_f32(36.0f);
   SVE_REP16(DECL)
 #undef DECL
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) acc##i = svbfmmla_f32(acc##i, a, b);
+#define STEP(i) acc##i = svbfmmla_f32(acc##i, acc##i, acc##i);
       SVE_REP16(STEP)
 #undef STEP
     }
@@ -297,14 +297,14 @@ static double runSveMatInt8Chain(uint64_t outer)
 {
   const svbool_t pg = svptrue_b32();
   const svint8_t a = svdup_s8(3), b = svdup_s8(5);
-#define DECL(i) svint32_t acc##i = svdup_s32(0);
+#define DECL(i) svint32_t acc##i = svdup_s32(36);
   SVE_REP16(DECL)
 #undef DECL
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) acc##i = svmmla_s32(acc##i, a, b);
+#define STEP(i) acc##i = svmmla_s32(acc##i, acc##i, acc##i);
       SVE_REP16(STEP)
 #undef STEP
     }
