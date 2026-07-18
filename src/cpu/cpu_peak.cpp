@@ -80,7 +80,7 @@ double CpuPeak::runWorkload(int nThreads, const Workload &body,
   // GPU default of 10000 — otherwise a cheap kernel (small per-iter time) hits
   // that cap and stops well short of the time budget, finishing in ~100 ms.
   unsigned int iters = pickIters(perIterUs, targetTimeUsLocal, forcedIters,
-                                 /*max_iters=*/1000000000u)*5;
+                                 /*max_iters=*/1000000000u);
   double TotalUs=  pool->run(nThreads, [&](int tid) { body(tid, iters); });
   return TotalUs / iters;
 }
