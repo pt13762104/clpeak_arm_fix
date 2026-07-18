@@ -40,7 +40,7 @@ namespace {
 #define SVE_REP16(X) SVE_REP8(X) X(8)X(9)X(10)X(11)X(12)X(13)X(14)X(15)
 #define SVE_REP24(X) SVE_REP16(X) X(16)X(17)X(18)X(19)X(20)X(21)X(22)X(23)
 static constexpr int SVE_NACC_FP  = 24;   // fp32/fp64/int32 MAD chains
-static constexpr int SVE_NACC_DOT = 16;   // SDOT / BFDOT / *MMLA (wider per-instr)
+static constexpr int SVE_NACC_DOT = 24;   // SDOT / BFDOT / *MMLA (wider per-instr)
 static constexpr int SVE_NACC_DIV = 8;    // divide/sqrt (few, partially pipelined units)
 
 // acc = acc*b + c  (svmad: MAD Zdn = Zdn*Zm + Za, destructive on the accumulator)
