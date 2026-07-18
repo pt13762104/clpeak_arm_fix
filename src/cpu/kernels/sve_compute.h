@@ -229,7 +229,7 @@ static double runSveInt8DpChain(uint64_t outer)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) acc##i = svdot_s32(acc##i, acc##i, acc##i);
+#define STEP(i) acc##i = svdot_s32(acc##i, (svint8_t)acc##i, (svint8_t)acc##i);
       SVE_REP16(STEP)
 #undef STEP
     }
@@ -256,7 +256,7 @@ static double runSveBf16Chain(uint64_t outer)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) acc##i = svbfdot_f32(acc##i, acc##i, acc##i);
+#define STEP(i) acc##i = svbfdot_f32(acc##i, (svbfloat16_t)acc##i, (svbfloat16_t)acc##i);
       SVE_REP16(STEP)
 #undef STEP
     }
@@ -278,7 +278,7 @@ static double runSveMatBf16Chain(uint64_t outer)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) acc##i = svbfmmla_f32(acc##i, acc##i, acc##i);
+#define STEP(i) acc##i = svbfmmla_f32(acc##i, (svbfloat16_t)acc##i, (svbfloat16_t)acc##i);
       SVE_REP16(STEP)
 #undef STEP
     }
@@ -304,7 +304,7 @@ static double runSveMatInt8Chain(uint64_t outer)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
-#define STEP(i) acc##i = svmmla_s32(acc##i, acc##i, acc##i);
+#define STEP(i) acc##i = svmmla_s32(acc##i, (svint8_t)acc##i, (svint8_t)acc##i);
       SVE_REP16(STEP)
 #undef STEP
     }
