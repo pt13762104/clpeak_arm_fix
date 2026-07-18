@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 // Visual category used for tonal coloring + section grouping in the UI.
 enum class TestType { FP_COMPUTE, INT_COMPUTE, BANDWIDTH, LATENCY, UNKNOWN }

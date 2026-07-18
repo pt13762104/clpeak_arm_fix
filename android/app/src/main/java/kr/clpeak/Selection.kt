@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 /**
  * User's pick of which backend devices to benchmark.

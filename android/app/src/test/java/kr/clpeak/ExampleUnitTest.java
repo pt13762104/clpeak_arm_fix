@@ -1,4 +1,4 @@
-package kr.clpeak;
+package test.clpeakarmfix;
 
 import org.junit.Test;
 

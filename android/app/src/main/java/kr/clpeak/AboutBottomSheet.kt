@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import kr.clpeak.databinding.AboutFormBinding
+import test.clpeakarmfix.databinding.AboutFormBinding
 
 class AboutBottomSheet : BottomSheetDialogFragment() {
 

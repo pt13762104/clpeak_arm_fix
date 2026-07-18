@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 // Mirrors the C++ ResultEntry produced by logger_android.cpp.
 // status is "ok" | "unsupported" | "skipped" | "error".

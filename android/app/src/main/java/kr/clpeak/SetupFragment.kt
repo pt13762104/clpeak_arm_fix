@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 import android.content.Context
 import android.os.Bundle
@@ -13,7 +13,7 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.materialswitch.MaterialSwitch
-import kr.clpeak.databinding.FragmentSetupBinding
+import test.clpeakarmfix.databinding.FragmentSetupBinding
 
 class SetupFragment : Fragment() {
 

@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 import android.animation.ValueAnimator
 import android.graphics.drawable.GradientDrawable
@@ -9,8 +9,8 @@ import android.view.animation.DecelerateInterpolator
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import kr.clpeak.databinding.ItemBenchmarkCategoryBinding
-import kr.clpeak.databinding.ItemBenchmarkMetricBinding
+import test.clpeakarmfix.databinding.ItemBenchmarkCategoryBinding
+import test.clpeakarmfix.databinding.ItemBenchmarkMetricBinding
 
 class ResultAdapter(
     private val onToggle: (backend: String, testName: String, category: String) -> Unit

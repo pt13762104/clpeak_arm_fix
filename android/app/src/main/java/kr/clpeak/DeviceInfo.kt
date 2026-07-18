@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 data class DeviceInfo(
     val backend: String,

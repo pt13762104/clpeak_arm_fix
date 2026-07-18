@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "kr.clpeak"
+    namespace = "test.clpeakarmfix"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "kr.clpeak"
+        applicationId = "test.clpeakarmfix"
         minSdk = 33
         targetSdk = 37
         versionCode = 30

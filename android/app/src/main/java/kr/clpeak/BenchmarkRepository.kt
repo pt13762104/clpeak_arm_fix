@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel

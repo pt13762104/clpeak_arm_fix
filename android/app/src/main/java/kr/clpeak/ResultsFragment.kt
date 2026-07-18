@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,7 +11,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayout
-import kr.clpeak.databinding.FragmentResultsBinding
+import test.clpeakarmfix.databinding.FragmentResultsBinding
 
 class ResultsFragment : Fragment() {
 

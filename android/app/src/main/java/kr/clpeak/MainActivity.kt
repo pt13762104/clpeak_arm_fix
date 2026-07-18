@@ -1,4 +1,4 @@
-package kr.clpeak
+package test.clpeakarmfix
 
 import android.os.Bundle
 import android.view.Menu
@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
-import kr.clpeak.databinding.ActivityMainBinding
+import test.clpeakarmfix.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 

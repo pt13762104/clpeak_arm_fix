@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">clpeak</string>
+    <string name="app_name">clpeak_arm_fix</string>
 
     <string name="about_clpeak">A synthetic micro-benchmark that measures the peak achievable performance of your device\'s GPU and CPU. It exercises tight vector / MAD / MMA loops to expose what the hardware is capable of in isolation, not real-world workload performance. Backends: Vulkan, OpenCL, and CPU.</string>
     <string name="about_url">https://github.com/krrishnarraj/clpeak</string>
