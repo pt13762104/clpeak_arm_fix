@@ -123,7 +123,7 @@ static double runBf16Chain(uint64_t outer)
 // ---- Mixed precision (fp16 mul -> fp32 acc, widening FMLA) ------------------
 #if (defined(__ARM_FEATURE_FP16FML) || defined(__ARM_FEATURE_FP16_FML)) && defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #define CPU_HAS_MP_KERNEL 1
-static constexpr int MP_NACC = 16, MP_OPS_PER_INSTR = 16;  // 2 FMLAL = 8 mul + 8 add
+static constexpr int MP_NACC = 32, MP_OPS_PER_INSTR = 16;  // 2 FMLAL = 8 mul + 8 add
 static double runMpChain(uint64_t outer)
 {
   float32x4_t acc[MP_NACC];
@@ -151,8 +151,17 @@ static double runMpChain(uint64_t outer)
       CPU_UNROLL_FULL
       for (int j = 0; j < MP_NACC; j++)
       {
-        acc[j] = vfmlalq_low_f16(acc[j], acc[j], acc[j]);    // acc += narrow(acc)*(-decay)
-        acc[j] = vfmlalq_high_f16(acc[j], acc[j], acc[j]); // acc += 1*refill (off-zero)
+        acc[j] = vfmlalq_low_f16(acc[j], acc[j], acc[j]);
+      }
+    }
+    for (uint64_t o = 0; o < outer; o++)
+    CPU_UNROLL_K
+    for (int k = 0; k < INNER; k++)
+    {
+      CPU_UNROLL_FULL
+      for (int j = 0; j < MP_NACC; j++)
+      {
+        acc[j] = vfmlalq_high_f16(acc[j], acc[j], acc[j]);
       }
     }
   float32x4_t s = acc[0];
