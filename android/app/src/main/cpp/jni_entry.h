@@ -1,8 +1,8 @@
 /* Header for Android JNI entry points */
 #include <jni.h>
 
-#ifndef _Included_kr_clpeak_BenchmarkRepository
-#define _Included_kr_clpeak_BenchmarkRepository
+#ifndef _Included_test_clpeakarmfix_BenchmarkRepository
+#define _Included_test_clpeakarmfix_BenchmarkRepository
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -11,7 +11,7 @@ extern "C" {
  * Method:    launchClpeak
  * Signature: (I[Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_kr_clpeak_BenchmarkRepository_launchClpeak
+JNIEXPORT jint JNICALL Java_test_clpeakarmfix_BenchmarkRepository_launchClpeak
 (JNIEnv *, jobject, jint, jobjectArray);
 
 /*
@@ -19,7 +19,7 @@ JNIEXPORT jint JNICALL Java_kr_clpeak_BenchmarkRepository_launchClpeak
  * Method:    nativeEnumerateBackends
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_kr_clpeak_BenchmarkRepository_nativeEnumerateBackends
+JNIEXPORT jstring JNICALL Java_test_clpeakarmfix_BenchmarkRepository_nativeEnumerateBackends
 (JNIEnv *, jobject);
 
 #ifdef __cplusplus
@@ -28,8 +28,8 @@ JNIEXPORT jstring JNICALL Java_kr_clpeak_BenchmarkRepository_nativeEnumerateBack
 #endif
 
 
-#ifndef _Included_kr_clpeak_MainActivity
-#define _Included_kr_clpeak_MainActivity
+#ifndef _Included_test_clpeakarmfix_MainActivity
+#define _Included_test_clpeakarmfix_MainActivity
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,7 +38,7 @@ extern "C" {
  * Method:    nativeGetVersion
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_kr_clpeak_AboutBottomSheet_nativeGetVersion
+JNIEXPORT jstring JNICALL Java_test_clpeakarmfix_AboutBottomSheet_nativeGetVersion
 (JNIEnv *, jobject);
 
 #ifdef __cplusplus

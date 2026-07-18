@@ -60,7 +60,7 @@ static std::vector<BackendInventory> enumerateAllBackends(const CliOptions &opts
     return out;
 }
 
-jint JNICALL Java_kr_clpeak_BenchmarkRepository_launchClpeak(JNIEnv *_jniEnv,
+jint JNICALL Java_test_clpeakarmfix_BenchmarkRepository_launchClpeak(JNIEnv *_jniEnv,
                                                              jobject _jObject, jint argc, jobjectArray _argv)
 {
     char **argv = (char **)malloc(sizeof(char *) * argc);
@@ -122,13 +122,13 @@ jint JNICALL Java_kr_clpeak_BenchmarkRepository_launchClpeak(JNIEnv *_jniEnv,
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_kr_clpeak_BenchmarkRepository_nativeEnumerateBackends(JNIEnv *env, jobject)
+Java_test_clpeakarmfix_BenchmarkRepository_nativeEnumerateBackends(JNIEnv *env, jobject)
 {
     CliOptions opts;
     return env->NewStringUTF(inventoryToJson(enumerateAllBackends(opts)).c_str());
 }
 
-jstring Java_kr_clpeak_AboutBottomSheet_nativeGetVersion(JNIEnv *jniEnv, jobject _jObj)
+jstring Java_test_clpeakarmfix_AboutBottomSheet_nativeGetVersion(JNIEnv *jniEnv, jobject _jObj)
 {
     (void)_jObj;
     return jniEnv->NewStringUTF(CLPEAK_VERSION_STR);
