@@ -3,9 +3,9 @@
 [![Google Play](https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg)](https://play.google.com/store/apps/details?id=kr.clpeak)
 [![Build](https://github.com/krrishnarraj/clpeak/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/krrishnarraj/clpeak/actions/workflows/build.yml)
 
-**clpeak &mdash; "Compute Latency PEAK".** A synthetic micro-benchmark that measures the peak achievable performance of GPU compute devices. It exercises tight vector / MAD / MMA loops and vendor-SDK GEMM libraries (cuBLASLt on NVIDIA, MPS on Apple) to expose what the hardware is capable of &mdash; from raw ALU peaks to near-vendor-advertised matrix throughput.
+**clpeak &mdash; "Compute Latency PEAK".** A synthetic micro-benchmark for measuring the peak achievable compute performance of CPUs and GPUs. It exercises tight vector, MAD, and MMA kernels, together with vendor-optimized GEMM libraries, to expose peak hardware throughput.
 
-clpeak began as an OpenCL-only tool and is now a multi-backend benchmark &mdash; OpenCL, Vulkan, CUDA, ROCm/HIP, Metal, oneAPI/SYCL, plus a native CPU backend &mdash; run back-to-back on the same hardware, so cross-stack differences (driver lowering, instruction scheduling, extension exposure) surface alongside the raw peak numbers.
+Originally an OpenCL benchmark, clpeak now supports OpenCL, Vulkan, CUDA, ROCm/HIP, Metal, oneAPI/SYCL, and native CPU execution, enabling direct cross-backend comparisons on the same hardware.
 
 ## Sample output
 
@@ -22,7 +22,7 @@ Backend: Metal
       half     : 4989.62
 
     simdgroup_matrix fp16xfp16+fp32 8x8x8 (TFLOPS)
-      simdgroup_fp16 : 15.84
+      simdgroup_fp16 : 5.14
 
     MPS GEMM peak (TFLOPS)
       fp32     : 4.09
@@ -30,12 +30,6 @@ Backend: Metal
 
     Global memory bandwidth (GBPS)
       float    : 184.49
-
-    Local memory bandwidth (GBPS)
-      float    : 2938.50
-
-    Image memory bandwidth (GBPS)
-      rgba32f  : 162.67
 ```
 
 NVIDIA RTX 5060, CUDA backend:
@@ -49,22 +43,21 @@ Backend: CUDA
       half     : 21077.21
       bf16     : 20042.78
 
-    WMMA fp16xfp16+fp32 16x16x16 (TFLOPS)
-      wmma_fp16 : 165.90
+    FP16 mma.sync m16n8k16+fp16 (TFLOPS)
+      fp16_f16acc : 83.36
 
-    WMMA int8xint8+int32 16x16x16 (TOPS)
-      wmma_int8 : 325.18
-
-    FP8(E4M3) mma.sync m16n8k32+fp32 (TFLOPS)
-      fp8_e4m3 : 85.08
+    INT8 mma.sync m16n8k32+int32 (TOPS)
+      int8_k32 : 164.68
 
     MXFP4(E2M1) mma.sync m16n8k64+fp32 (TFLOPS)
       mxf4_e2m1 : 324.54
+
     NVFP4(E2M1) mma.sync m16n8k64+fp32 (TFLOPS)
       nvf4_e2m1 : 327.00
 
     MXFP4 mma.sp 2:4 sparsity m16n8k128+fp32 (TFLOPS)
       mxf4_sparse : 630.37
+
     NVFP4 mma.sp 2:4 sparsity m16n8k128+fp32 (TFLOPS)
       nvf4_sparse : 630.45
 
@@ -76,14 +69,12 @@ Backend: CUDA
       bf16     : 41.14
       fp8_e4m3 : 143.89
       nvf4_e2m1 : 298.99
+
     cuBLASLt GEMM peak (TOPS)
       int8     : 149.18
 
     Global memory bandwidth (GBPS)
       float4   : 418.82
-
-    Local memory bandwidth (GBPS)
-      float4   : 9118.74
 
     Kernel launch latency (US)
       roundtrip : 6.24
@@ -103,17 +94,22 @@ Backend: ROCm
 
     MFMA fp16xfp16+fp32 16x16x16 (TFLOPS)
       mfma_fp16 : 1128.18
+
     MFMA bf16xbf16+fp32 16x16x16 (TFLOPS)
       mfma_bf16 : 1124.29
+
     MFMA fp8xfp8+fp32 16x16x32 (TFLOPS)
       mfma_fp8 : 2166.78
+
     MFMA int8xint8+int32 16x16x32 (TOPS)
       mfma_int8 : 2339.26
 
     Sparse MFMA fp16 2:4 16x16x32 (TFLOPS)
       smfmac_fp16 : 2154.45
+
     Sparse MFMA fp8 2:4 16x16x64 (TFLOPS)
       smfmac_fp8 : 4138.86
+
     Sparse MFMA int8 2:4 16x16x64 (TOPS)
       smfmac_int8 : 4499.68
 
@@ -121,14 +117,12 @@ Backend: ROCm
       fp32     : 129.70
       fp64     : 100.48
       fp16     : 840.05
+
     hipBLASLt FP8 GEMM peak (TFLOPS)
       fp8_e4m3 : 1588.02
 
     Global memory bandwidth (GBPS)
       float4   : 3577.33
-
-    Local memory bandwidth (GBPS)
-      float4   : 65024.37
 
     Kernel launch latency (US)
       roundtrip : 8.66
@@ -163,22 +157,6 @@ cmake -S . -B build -DCLPEAK_ENABLE_ONEAPI=ON -DCMAKE_CXX_COMPILER=icpx
 | `CLPEAK_ENABLE_ONEAPI` | `ON` | Skip oneAPI/SYCL |
 | `CLPEAK_ENABLE_CPU` | `ON` | Skip native CPU backend (no SDK; otherwise always available) |
 
-## What it measures
-
-| Test | OpenCL | Vulkan | CUDA | ROCm/HIP | Metal | oneAPI/SYCL | CPU |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Global memory bandwidth | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| Local / shared memory bandwidth | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| Image / texture bandwidth | &check; | &check; | &check; | &check; | &check; | &check; | &mdash; |
-| Transfer bandwidth (host&harr;device) | &check; | &check; | &check; | &check; | &mdash; | &check; | &mdash; |
-| Compute SP / HP / DP / MP / BF16 | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| Compute INT (int32) | &check; | &check; | &check; | &check; | &mdash; | &check; | &check; |
-| Compute INT24 / INT8 / INT16 | &check; | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; | &mdash; |
-| INT8 dot-product (DP4a) | &check; | &check; | &check; | &check; | &mdash; | &check; | &check; |
-| Tensor / matrix-engine MMA (`--wmma`, `--simdgroup-matrix`, `--coopmat`, `--rocwmma`, `--mfma`, `--joint-matrix`, `--amx`) | &mdash; | coopmat fp32/fp16/bf16/int8/fp8 | WMMA fp16/bf16/int8 + FP8 mma.sync + FP4/MXFP4/NVFP4 mma.sync | rocWMMA fp16/int8 + raw MFMA fp16/bf16/int8/fp8/mxfp4 | simdgroup_matrix fp16/bf16 | joint_matrix bf16/int8 (XMX) | AMX / SMMLA / BFMMLA (int8/fp16/bf16) |
-| Vendor-SDK GEMM peak (`--cublas`, `--rocblas`, `--mps-gemm`, `--onemkl`) | &mdash; | &mdash; | cuBLASLt: fp32/tf32/fp16/bf16/fp8&#x2011;e4m3/fp8&#x2011;e5m2/int8/int4 | rocBLAS: fp32/fp64/fp16 + hipBLASLt: fp8&#x2011;e4m3/fp8&#x2011;e5m2 | MPS: fp32/fp16/bf16 | oneMKL: fp32/fp64/fp16 | &mdash; |
-| Kernel launch latency | &check; | &check; | &check; | &check; | &check; | &check; | &mdash; |
-
 ## CLI
 
 `./clpeak --help` prints the full flag list. The CLI is uniform across backends: the same global, test-selection, and output flags work whether OpenCL, Vulkan, CUDA, ROCm/HIP, Metal, oneAPI/SYCL, or CPU is doing the work.
@@ -202,6 +180,9 @@ cmake -S . -B build -DCLPEAK_ENABLE_ONEAPI=ON -DCMAKE_CXX_COMPILER=icpx
 ./clpeak --joint-matrix               # Intel XMX matrix-engine tests (hand-rolled joint_matrix)
 ./clpeak --onemkl                     # Intel vendor-SDK GEMM peak (oneMKL)
 ./clpeak --amx                        # CPU matrix-engine tests (AMX / SMMLA / BFMMLA)
+./clpeak --crypto                     # CPU crypto/hash silicon in GB/s (AES, SHA-256/512, CRC32-C)
+./clpeak --divide-sqrt-compute        # CPU divider/sqrt-unit throughput (fp32/fp64)
+./clpeak --atomics --branch-penalty   # CPU sync + branch-mispredict cost probes (ns)
 ./clpeak --coopmat                    # Vulkan tensor-core tests
 ./clpeak --xml-file out.xml           # save results (also --json-file / --csv-file)
 ./clpeak --compare baseline.json      # diff this run against a saved baseline JSON
@@ -224,7 +205,7 @@ a comma-separated list; omitting it runs every device in that backend:
 ./clpeak --oneapi-device 0               # oneAPI/SYCL device index
 ```
 
-The CPU backend is a single device with no index flag — use `--no-cpu` to skip it.
+The CPU backend is a single device with no index flag. Use `--no-cpu` to skip it.
 
 ## For AI agents
 

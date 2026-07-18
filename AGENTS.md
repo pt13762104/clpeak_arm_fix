@@ -25,8 +25,7 @@ The CLI entry point is `src/cli/main.cpp` with its own `logger.cpp`.
 
 | Path | Purpose |
 |------|---------|
-| `include/common/` | All neutral headers — `peak.h`, `benchmark_enums.h`, `logger.h` (base), etc. |
-| `include/cli/` | CLI-specific headers — `logger_cli.h` |
+| `include/common/` | All neutral headers — `peak.h`, `benchmark_enums.h`, `logger.h` (base), `logger_text.h` (shared text logger), etc. |
 | `include/opencl/` | OpenCL backend headers — `cl_peak.h`, `cl_common.h` |
 | `include/vulkan/` | Vulkan backend header — `vk_peak.h` |
 | `include/cuda/` | CUDA backend header — `cuda_peak.h` |
@@ -37,12 +36,12 @@ The CLI entry point is `src/cli/main.cpp` with its own `logger.cpp`.
 | `src/common/` | `Peak` base, gating, result store, calibration, inventory (no logger) |
 | `src/opencl/` | OpenCL backend: `clPeak` class + per-benchmark `.cpp` + `.cl` kernels |
 | `src/vulkan/` | Vulkan backend: `vkPeak` class + SPIR-V shaders |
-| `src/cuda/` | CUDA backend: `CudaPeak` class + `.cu` kernels (NVRTC-compiled at runtime) |
-| `src/rocm/` | ROCm/HIP backend: `RocmPeak` class + `.hip` kernels (HIPRTC-compiled at runtime) |
+| `src/cuda/` | CUDA backend: `CudaPeak` class + `.cu` kernels (AOT-compiled to fatbins at build time, embedded in the binary) |
+| `src/rocm/` | ROCm/HIP backend: `RocmPeak` class + `.hip` kernels (AOT-compiled with hipcc --genco at build time, embedded in the binary) |
 | `src/metal/` | Metal backend: `MetalPeak` class (ObjC++) + `.metal` kernels |
 | `src/oneapi/` | oneAPI/SYCL backend: `OneapiPeak` class + SYCL kernels (inline lambdas, AOT/JIT via DPC++) |
-| `src/cpu/` | Native CPU backend: `CpuPeak` class + `std::thread` pool + per-ISA SIMD kernels (`-march`/`-mcpu=native`); cache/DRAM bandwidth + memory latency |
-| `src/cli/` | Desktop CLI: `main.cpp`, `logger.cpp` (stdout output) |
+| `src/cpu/` | Native CPU backend: `CpuPeak` class + `std::thread` pool + per-ISA SIMD kernels (one feature TU per ISA, runtime-dispatched); cache/DRAM bandwidth + memory latency |
+| `src/cli/` | Desktop CLI: `main.cpp` |
 | `src/common/cmake/` | Version handling (`version.cmake`, `GenVersion.cmake`, `version.h.in`) |
 | `android/` | Android app (Vulkan, OpenCL, CPU) with JNI native module, its own `logger_android.cpp` |
 | `ios/` | iOS SwiftUI app with Vulkan-over-MoltenVK, Metal, and CPU backends |
