@@ -66,13 +66,13 @@ static double runMatInt8Chain(uint64_t outer)
   int32x4_t acc[NACC];
   const int8x16_t a = vdupq_n_s8(3);
   const int8x16_t b = vdupq_n_s8(5);
-  for (int j = 0; j < NACC; j++) acc[j] = vdupq_n_s32(0);
+  for (int j = 0; j < NACC; j++) acc[j] = vdupq_n_s32(36);
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < NACC; j++) acc[j] = vmmlaq_s32(acc[j], a, b);
+      for (int j = 0; j < NACC; j++) acc[j] = vmmlaq_s32(acc[j], acc[j], acc[j]);
     }
   int32x4_t s = acc[0];
   for (int j = 1; j < NACC; j++) s = vaddq_s32(s, acc[j]);
@@ -122,13 +122,13 @@ static double runMatFpChain(uint64_t outer)
   const bfloat16x4_t lo = vcvt_bf16_f32(vdupq_n_f32(1.0001f));
   const bfloat16x8_t a  = vcombine_bf16(lo, lo);
   const bfloat16x8_t b  = vcombine_bf16(lo, lo);
-  for (int j = 0; j < NACC; j++) acc[j] = vdupq_n_f32(0.0f);
+  for (int j = 0; j < NACC; j++) acc[j] = vdupq_n_f32(36.0f);
   for (uint64_t o = 0; o < outer; o++)
     CPU_UNROLL_K
     for (int k = 0; k < INNER; k++)
     {
       CPU_UNROLL_FULL
-      for (int j = 0; j < NACC; j++) acc[j] = vbfmmlaq_f32(acc[j], a, b);
+      for (int j = 0; j < NACC; j++) acc[j] = vbfmmlaq_f32(acc[j], acc[j], acc[j]);
     }
   float32x4_t s = acc[0];
   for (int j = 1; j < NACC; j++) s = vaddq_f32(s, acc[j]);
